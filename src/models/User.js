@@ -57,6 +57,10 @@ const userSchema = new mongoose.Schema(
                 message: `{VALUE} is an invalid account status`,
             },
         },
+        lastActiveAt: {
+            type: Date,
+            default: Date.now
+        },
         deliveryAddresses: [
             {
                 type: mongoose.Schema.Types.ObjectId,
