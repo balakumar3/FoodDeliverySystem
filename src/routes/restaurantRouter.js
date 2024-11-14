@@ -1,4 +1,5 @@
 const express = require("express");
+const { validateSignUpData } = require("../utils/validation");
 const Menu = require("../models/Menu");
 const Restaurant = require("../models/Restaurant");
 const Order = require("../models/Order");
