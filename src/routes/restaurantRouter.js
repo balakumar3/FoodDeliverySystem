@@ -100,7 +100,7 @@ restaurantRouter.post("/reataurant/login", async (req, res) => {
 
 restaurantRouter.get("/restaurant/:userId", userAuth, async (req, res) => {
     try {
-        const restaurant = await Restaurant.findAll( {owner: req.params.userId} );
+        const restaurant = await Restaurant.find( {owner: req.params.userId} );
         res.json({ message: "Restaurant Found !!!", data: restaurant });
     }
     catch (err) {
