@@ -210,6 +210,7 @@ restaurantRouter.delete("/item/:userId/:menuItemId", userAuth, async (req, res) 
             throw new Error("Menu Item not found to Delete!!!");
         }
         Menu.deleteOne(menu);
+        res.status(201).json({ message: 'Menu Item Deleted Successfully!!!'});
     } catch (err) {
         res.status(400).send("ERROR : " + err.message);
     }
