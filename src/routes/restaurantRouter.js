@@ -8,12 +8,12 @@ const Order = require("../models/Order");
 const { userAuth } = require("../middlewares/auth");
 const restaurantRouter = express.Router();
 
-function isAdminOrRestaurant (userId) {
+async function isAdminOrRestaurant (userId) {
     try {
         if (!userId) {
             throw new Error("User ID not found in the request");
         }
-        const user = User.findById(userId);
+        const user = await User.findById(userId);
         if (!user || (user.role !== "admin" && user.role !== "restaurant")) {
             throw new Error("Invalid Authorization");
         }
