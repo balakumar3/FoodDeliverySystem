@@ -17,6 +17,6 @@ deliveryRoutes.get('/orders', protect, getAvailableOrders);
 deliveryRoutes.put('/orders/:id/accept', protect, acceptOrder);
 deliveryRoutes.put('/orders/:id/status', protect, updateDeliveryStatus);
 deliveryRoutes.put('/availability', protect, setAvailability);
-deliveryRoutes.delete('/deliverypartner',protect, deleteDeliveryPartner);
+
 
 module.exports = deliveryRoutes;
