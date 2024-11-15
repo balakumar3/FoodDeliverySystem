@@ -18,7 +18,7 @@ function isAdminOrRestaurant (userId) {
         }
     }
     catch (err) {
-        res.status(400).send("ERROR : " + err.message);
+        throw new Error(err);
     }
 }
 
