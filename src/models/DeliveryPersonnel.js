@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const deliveryPersonnelSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  password: { type: String, required: true, minlength: 60 },
   contactDetails: { type: String },
   vehicleType: { type: String },
   isAvailable: { type: Boolean, default: true },
