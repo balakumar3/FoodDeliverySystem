@@ -68,6 +68,31 @@ customerRouter.post("/login", async (req, res) => {
 });
 
 // Add Delivery Address
+// customerRouter.post('/users/:userId/delivery-addresses', userAuth, async (req, res) => {
+//     try {
+//         const user = await User.findById(req.params.userId);
+//         if (!user) {
+//             return res.status(404).json({ error: 'User not found' });
+//         }
+
+//         const newAddress = new DeliveryAddress({
+//             userId: user._id,
+//             ...req.body
+//         });
+
+//         if (!newAddress.firstName || !newAddress.lastName || !newAddress.addressLine1 || !newAddress.city || !newAddress.state || !newAddress.country || !newAddress.postalCode) {
+//             return res.status(400).json({ error: 'Missing required fields' });
+//         }
+
+//         await newAddress.save();
+//         res.status(201).json({ message: 'Delivery address added successfully', address: newAddress });
+//     } catch (error) {
+//         res.status(500).json({ error: 'Internal server error' });
+//     }
+// });
+
+// Add Delivery Address
+
 customerRouter.post('/users/:userId/delivery-addresses', userAuth, async (req, res) => {
     try {
         const user = await User.findById(req.params.userId);
@@ -75,21 +100,90 @@ customerRouter.post('/users/:userId/delivery-addresses', userAuth, async (req, r
             return res.status(404).json({ error: 'User not found' });
         }
 
+        const requiredFields = ["firstName", "lastName", "addressLine1", "city", "state", "country", "postalCode"];
+        for (const field of requiredFields) {
+            if (!req.body[field]) {
+                return res.status(400).json({ error: `Missing required field: ${field}` });
+            }
+        }
+
+        const { isDefault } = req.body;
+
+        if (isDefault) {
+            // Ensure only one default address per user
+            await DeliveryAddress.updateMany(
+                { userId: user._id, isDefault: true },
+                { $set: { isDefault: false } }
+            );
+        }
+
         const newAddress = new DeliveryAddress({
             userId: user._id,
-            ...req.body
+            ...req.body,
         });
-
-        if (!newAddress.firstName || !newAddress.lastName || !newAddress.addressLine1 || !newAddress.city || !newAddress.state || !newAddress.country || !newAddress.postalCode) {
-            return res.status(400).json({ error: 'Missing required fields' });
-        }
 
         await newAddress.save();
         res.status(201).json({ message: 'Delivery address added successfully', address: newAddress });
     } catch (error) {
+        console.error("Error saving delivery address:", error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+// Update Delivery Address
+customerRouter.put('/users/:userId/delivery-addresses/:addressId', userAuth, async (req, res) => {
+    try {
+        const { userId, addressId } = req.params;
+        const updatedData = { ...req.body };
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const address = await DeliveryAddress.findOne({ _id: addressId, userId: user._id });
+        if (!address) {
+            return res.status(404).json({ error: 'Address not found' });
+        }
+
+        // Reset other default addresses if needed
+        if (updatedData.isDefault) {
+            await DeliveryAddress.updateMany(
+                { userId: user._id, isDefault: true },
+                { $set: { isDefault: false } }
+            );
+        }
+
+        // Update the address
+        Object.assign(address, updatedData);
+        const savedAddress = await address.save();
+
+        res.status(200).json({ message: 'Address updated successfully', address: savedAddress });
+    } catch (error) {
+        console.error('Error updating delivery address:', error.message);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
+
+// Delete Delivery Address
+customerRouter.delete('/users/:userId/delivery-addresses/:addressId', userAuth, async (req, res) => {
+    try {
+        const { userId, addressId } = req.params;
+
+        const address = await DeliveryAddress.findOneAndDelete({ _id: addressId, userId });
+        if (!address) {
+            return res.status(404).json({ error: 'Address not found' });
+        }
+
+        res.json({ message: 'Delivery address deleted successfully' });
+    } catch (error) {
+        console.error("Error deleting delivery address:", error);
+        res.status(500).json({ error: 'Failed to delete delivery address' });
+    }
+});
+
 
 // Logout
 customerRouter.post("/logout", userAuth, (req, res) => {
@@ -128,8 +222,31 @@ customerRouter.get("/restaurants/search", userAuth, async (req, res) => {
 });
 
 // Place an Order
+// customerRouter.post("/orders", userAuth, async (req, res) => {
+//     try {
+//         const { restaurantId, items, deliveryAddressId } = req.body;
+
+//         const newOrder = new Order({
+//             userId: req.user._id,
+//             restaurantId,
+//             items,
+//             deliveryAddressId,
+//             status: "preparing"
+//         });
+
+//         const savedOrder = await newOrder.save();
+//         res.status(201).json({ message: "Order placed successfully", order: savedOrder });
+//     } catch (error) {
+//         res.status(500).json({ error: "Failed to place order" });
+        
+        
+        
+//     }
+// });
+
 customerRouter.post("/orders", userAuth, async (req, res) => {
     try {
+        console.log(req.body); // Check the received request body
         const { restaurantId, items, deliveryAddressId } = req.body;
 
         const newOrder = new Order({
@@ -143,9 +260,11 @@ customerRouter.post("/orders", userAuth, async (req, res) => {
         const savedOrder = await newOrder.save();
         res.status(201).json({ message: "Order placed successfully", order: savedOrder });
     } catch (error) {
-        res.status(500).json({ error: "Failed to place order" });
+        console.error(error); // Log the detailed error
+        res.status(500).json({ error: "Failed to place order", details: error.message });
     }
 });
+
 
 // Track Orders
 customerRouter.get("/orders/:orderId/track", userAuth, async (req, res) => {
@@ -172,5 +291,3 @@ customerRouter.get("/orders/history", userAuth, async (req, res) => {
 });
 
 module.exports = customerRouter;
-
-
