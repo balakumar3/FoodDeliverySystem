@@ -19,7 +19,7 @@ async function isAdminOrRestaurant (userId) {
         }
     }
     catch (err) {
-        throw new Error(err);
+        throw new Error(err.message);
     }
 }
 
