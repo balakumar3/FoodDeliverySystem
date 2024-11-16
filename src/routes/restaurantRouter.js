@@ -5,7 +5,6 @@ const bcrypt = require("bcrypt");
 const Menu = require("../models/Menu");
 const Restaurant = require("../models/Restaurant");
 const Order = require("../models/Order");
-const OrderItems = require("../models/OrderItem");
 const { userAuth } = require("../middlewares/auth");
 const restaurantRouter = express.Router();
 
@@ -20,7 +19,7 @@ async function isAdminOrRestaurant (userId) {
         }
     }
     catch (err) {
-        throw new Error(err.message);
+        throw new Error(err);
     }
 }
 
@@ -69,28 +68,6 @@ restaurantRouter.post("/register", async (req, res) => {
     }
 });
 
-restaurantRouter.post("/register/:userId", async (req, res) => {
-    try {
-        // Validation of data\
-        const { restaurantName, address, cuisineType, openingHours, deliveryZone } = req.body;
-        isAdminOrRestaurant(req.params.userId);
-
-        const restaurant = new Restaurant({
-            owner: req.params.userId,
-            restaurantName,
-            address,
-            cuisineType,
-            openingHours,
-            deliveryZone
-        })
-        const savedRestaurant = await restaurant.save()
-
-        res.json({ message: "Restaurant added successfully!", data: savedRestaurant});
-    } catch (err) {
-        res.status(400).send("ERROR : " + err.message);
-    }
-});
-
 restaurantRouter.post("/login", async (req, res) => {
     try {
         const { emailId, password } = req.body;
@@ -113,6 +90,7 @@ restaurantRouter.post("/login", async (req, res) => {
             res.cookie("token", token, {
                 expires: new Date(Date.now() + 8 * 3600000),
             });
+            
             res.send(user);
         } else {
             throw new Error("Invalid credentials");
@@ -176,10 +154,10 @@ restaurantRouter.get("/menu/:userId/:restaurantId", userAuth, async (req, res) =
     }
 });
 
-restaurantRouter.post("/item/:userId", userAuth, async (req, res) => {
+restaurantRouter.post("/item", userAuth, async (req, res) => {
     try {
-        const { restaurant ,itemName, description, price, availability } = req.body;
-        isAdminOrRestaurant(req.params.userId);
+        const { userId, restaurant ,itemName, description, price, availability } = req.body;
+        isAdminOrRestaurant(userId);
         const menu = new Menu({
             restaurant,
             itemName,
@@ -207,6 +185,7 @@ restaurantRouter.patch("/item/:itemId", userAuth, async (req, res) => {
         if (price) updateData['price'] = price;
         if (availability) updateData['availability'] = availability;
 
+        
         // Update the user with the filtered data
         const updatedMenuItem = await Menu.findByIdAndUpdate(
             req.params.itemId,
@@ -243,32 +222,7 @@ restaurantRouter.get("/orders/:userId/:restaurantId/:status", userAuth, async (r
     try {
         isAdminOrRestaurant(req.params.userId);
         const order = await Order.find( {restaurant: req.params.restaurantId, orderStatus: req.params.status} );
-        console.log(order);
-        let responseObj = [];
-        order.forEach((element) => {
-            let itemsObject = [];
-            element.items.forEach((element1) => {
-                const orderItemObject = OrderItems.findById(element1);
-                const menuObject = Menu.findById(orderItemObject.menuItem);
-                let itemObj = {
-                    item: menuObject.itemName,
-                    quantity: orderItemObject.quantity
-                }
-                itemsObject.push(itemObj);
-            })
-            let orderObject = {
-                id: element._id,
-                customer: element.customer,
-                restaurant: element.restaurant,
-                orderDate: element.orderDate,
-                orderStatus: element.orderStatus,
-                totalAmount: element.totalAmount,
-                deliveryTime: element.deliveryTime,
-                items: itemsObject
-            };
-            responseObj.push(orderObject);
-        });
-        res.json({ message: "List of all Orders with status - " + req.params.status, data: responseObj });
+        res.json({ message: "List of all Orders with status - " + req.params.status, data: order });
     }
     catch (err) {
         res.status(400).send("ERROR : " + err.message);
