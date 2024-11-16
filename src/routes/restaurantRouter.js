@@ -154,10 +154,10 @@ restaurantRouter.get("/menu/:userId/:restaurantId", userAuth, async (req, res) =
     }
 });
 
-restaurantRouter.post("/item", userAuth, async (req, res) => {
+restaurantRouter.post("/item/:userId", userAuth, async (req, res) => {
     try {
-        const { userId, restaurant ,itemName, description, price, availability } = req.body;
-        isAdminOrRestaurant(userId);
+        const { restaurant ,itemName, description, price, availability } = req.body;
+        isAdminOrRestaurant(req.params.userId);
         const menu = new Menu({
             restaurant,
             itemName,
@@ -222,7 +222,32 @@ restaurantRouter.get("/orders/:userId/:restaurantId/:status", userAuth, async (r
     try {
         isAdminOrRestaurant(req.params.userId);
         const order = await Order.find( {restaurant: req.params.restaurantId, orderStatus: req.params.status} );
-        res.json({ message: "List of all Orders with status - " + req.params.status, data: order });
+        console.log(order);
+        let responseObj = [];
+        order.forEach((element) => {
+            let itemsObject = [];
+            element.items.forEach((element1) => {
+                const orderItemObject = OrderItems.findById(element1);
+                const menuObject = Menu.findById(orderItemObject.menuItem);
+                let itemObj = {
+                    item: menuObject.itemName,
+                    quantity: orderItemObject.quantity
+                }
+                itemsObject.push(itemObj);
+            })
+            let orderObject = {
+                id: element._id,
+                customer: element.customer,
+                restaurant: element.restaurant,
+                orderDate: element.orderDate,
+                orderStatus: element.orderStatus,
+                totalAmount: element.totalAmount,
+                deliveryTime: element.deliveryTime,
+                items: itemsObject
+            };
+            responseObj.push(orderObject);
+        });
+        res.json({ message: "List of all Orders with status - " + req.params.status, data: responseObj });
     }
     catch (err) {
         res.status(400).send("ERROR : " + err.message);
