@@ -156,7 +156,7 @@ customerRouter.post("/placeOrder", userAuth, async (req, res) => {
       
 
       const newOrderItem = new OrderItem({
-        menuItem: menuItemOut._id,
+        menuItem: menuItem,
         quantity,
         order: null,
       });
