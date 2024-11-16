@@ -1,26 +1,37 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const deliveryPersonnelSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true, minlength: 60 },
-  contactDetails: { type: String },
-  vehicleType: { type: String },
-  isAvailable: { type: Boolean, default: true },
-}, { timestamps: true });
+const deliveryPersonnelSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    contactDetails: { type: String },
+    vehicleType: { type: String },
+    isAvailable: { type: Boolean, default: true },
+    tokenVersion: { type: Number, default: 0 },
+    role: { type: String, enum: ['Delivery', 'Admin'], default: 'Delivery' },
+  },
+  { timestamps: true }
+);
 
-// Password Hashing
-deliveryPersonnelSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    next();
-  }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
+// Password Comparison Method
 deliveryPersonnelSchema.methods.matchPassword = async function (enteredPassword) {
+
+  // Compare entered password with stored hashed password
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+deliveryPersonnelSchema.methods.validatePassword = async function (passwordInputByUser) {
+  const user = this;
+  const passwordHash = user.password;
+
+  const isPasswordValid = await bcrypt.compare(
+      passwordInputByUser,
+      passwordHash
+  );
+
+  return isPasswordValid;
 };
 
 module.exports = mongoose.model('DeliveryPersonnel', deliveryPersonnelSchema);
