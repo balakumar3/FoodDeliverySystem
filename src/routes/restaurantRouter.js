@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const Menu = require("../models/Menu");
 const Restaurant = require("../models/Restaurant");
 const Order = require("../models/Order");
+const OrderItems = require("../models/OrderItem");
 const { userAuth } = require("../middlewares/auth");
 const restaurantRouter = express.Router();
 
