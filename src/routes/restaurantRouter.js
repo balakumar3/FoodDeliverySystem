@@ -175,10 +175,10 @@ restaurantRouter.get("/menu/:userId/:restaurantId", userAuth, async (req, res) =
     }
 });
 
-restaurantRouter.post("/item", userAuth, async (req, res) => {
+restaurantRouter.post("/item/:userId", userAuth, async (req, res) => {
     try {
-        const { userId, restaurant ,itemName, description, price, availability } = req.body;
-        isAdminOrRestaurant(userId);
+        const { restaurant ,itemName, description, price, availability } = req.body;
+        isAdminOrRestaurant(req.params.userId);
         const menu = new Menu({
             restaurant,
             itemName,
