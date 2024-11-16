@@ -37,12 +37,12 @@ adminRouter.post("/login", async (req, res) => {
             res.cookie("token", token, {
                 expires: new Date(Date.now() + 8 * 3600000),
             });
-            res.status(200).send("User login successfully");
+            res.send("User login successfully");
         } else {
             throw new Error("Invalid credentials");
         }
     } catch (err) {
-        res.status(400).json({ error: "ERROR : " + err.message });
+        res.status(400).send("ERROR : " + err.message);
     }
 });
 
@@ -53,7 +53,7 @@ adminRouter.post("/logout", userAuth, isAdmin, async (req, res) => {
     const userDocument = await User.findByIdAndUpdate(req.user._id, {
         lastActiveAt: Date.now()
     }, { new: true }); // Returns the updated document
-    res.status(200).send("Logout is successfull!!");
+    res.send("Logout is successfull!!");
 });
 
 
@@ -78,9 +78,9 @@ adminRouter.post("/register/users", userAuth, isAdmin, async (req, res) => {
         });
         await user.save();
 
-        res.status(201).json({ message: "User Data added successfully!" });
+        res.json({ message: "User Data added successfully!" });
     } catch (err) {
-        res.status(400).json({ error: "ERROR : " + err.message });
+        res.status(400).send("ERROR : " + err.message);
     }
 
 });
@@ -91,9 +91,9 @@ adminRouter.patch("/users/deactivate/:userId", userAuth, isAdmin, async (req, re
         if (user === null) {
             throw new Error("UserId is not found ");
         }
-        res.json({ message: 'User deactivated', user });
+        res.json({ message: 'User deactivated' });
     } catch (error) {
-        res.status(400).json({ error: `Error deactivating user ${error}` });
+        res.status(400).json({ message: `Error deactivating user ${error}` });
     }
 });
 
@@ -107,7 +107,7 @@ adminRouter.patch("/users/:userId", userAuth, isAdmin, async (req, res) => {
         if (phoneNumber) updateData['phoneNumber'] = phoneNumber;
         if (firstName) updateData['firstName'] = firstName;
         if (lastName) updateData['lastName'] = lastName;
-        if (status) updateData['sstatus'] = status;
+        if (status) updateData['status'] = status;
 
         // Update the user with the filtered data
         const updatedUser = await User.findByIdAndUpdate(
@@ -120,9 +120,9 @@ adminRouter.patch("/users/:userId", userAuth, isAdmin, async (req, res) => {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        res.json(updatedUser);
+        res.json({ message: 'User details updated successfully' });
     } catch (error) {
-        res.status(400).json({ error: 'Error updating user', error });
+        res.status(400).json({ message: 'Error updating user', error });
     }
 });
 
@@ -199,7 +199,7 @@ adminRouter.get('/orders', userAuth, isAdmin, async (req, res) => {
 
         const totalOrders = await Order.countDocuments(query);
 
-        res.status(200).json({
+        res.json({
             data: orders,
             page: parseInt(page),
             totalPages: Math.ceil(totalOrders / limit),
