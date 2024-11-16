@@ -1,20 +1,33 @@
 const jwt = require('jsonwebtoken');
 const DeliveryPersonnel = require('../models/DeliveryPersonnel');
 
-const protect = async (req, res, next) => {
-  let token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+exports.protect = async (req, res, next) => {
+  let token;
 
-  if (token) {
+  // Check for the token in the Authorization header
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {
+      // Extract token from the Authorization header
+      token = req.headers.authorization.split(' ')[1];
+
+      // Verify token
       const decoded = jwt.verify(token, process.env.JWT_PRIVATE_KEY);
-      req.personnel = await DeliveryPersonnel.findById(decoded.id).select('-password');
+
+      // Find the delivery personnel based on the decoded ID
+      const personnel = await DeliveryPersonnel.findById(decoded.userId).select('-password');
+      
+      if (!personnel) {
+        return res.status(401).json({ message: 'Not authorized, personnel not found' });
+      }
+
+      // Attach personnel to the request object
+      req.personnel = personnel;
       next();
     } catch (error) {
-      res.status(401).json({ message: 'Not authorized' });
+      console.error('Authorization error:', error.message);
+      return res.status(401).json({ message: 'Not authorized, token failed' });
     }
   } else {
-    res.status(401).json({ message: 'No token' });
+    return res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
-
-module.exports = { protect };
