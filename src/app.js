@@ -6,7 +6,6 @@ const cookieParser = require("cookie-parser");
 const authRouter = require("./routes/auth");
 const adminRouter = require("./routes/adminRouter");
 const customerRouter = require("./routes/customerRouter");
-//const deliveryRouter = require("./routes/deliveryRouter");
 const deliveryRoutes = require("./routes/deliveryRoutes");
 const restaurantRouter = require("./routes/restaurantRouter");
 
@@ -15,7 +14,6 @@ app.use(cookieParser());
 
 app.use("/admin", adminRouter);
 app.use("/customer", customerRouter);
-//app.use("/delivery", deliveryRouter);
 app.use("/deliveryy", deliveryRoutes);
 app.use("/restaurant", restaurantRouter);
 app.use("/", authRouter)
