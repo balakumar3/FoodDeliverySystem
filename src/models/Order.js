@@ -10,7 +10,7 @@ const orderSchema = new mongoose.Schema({
         default: 'Pending'
     },
     totalAmount: { type: Number },
-    deliveryTime: { type: Number },
+    deliveryTime: { type: Date },
     items: [{ type: mongoose.Schema.Types.ObjectId, ref: 'OrderItem' }]
 }, {
     timestamps: true,
