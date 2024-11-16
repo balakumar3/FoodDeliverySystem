@@ -191,11 +191,11 @@ restaurantRouter.patch("/item/:itemId", userAuth, async (req, res) => {
             { new: true, runValidators: true }
         );
 
-        if (!updatedRestaurant) {
+        if (!updatedMenuItem) {
             return res.status(404).json({ message: 'MenuItem not found' });
         }
 
-        res.json(updatedUser);
+        res.json(updatedMenuItem);
     } catch (error) {
         res.status(400).json({ message: 'Error updating user', error });
     }
@@ -205,11 +205,11 @@ restaurantRouter.delete("/item/:userId/:menuItemId", userAuth, async (req, res) 
 
     try {
         isAdminOrRestaurant(req.params.userId);
-        const menu = await Menu.findById(req.params.menuItemId);
-        if (!menu) {
+        const menuItem = await Menu.findById(req.params.menuItemId);
+        if (!menuItem) {
             throw new Error("Menu Item not found to Delete!!!");
         }
-        Menu.deleteOne(menu);
+        Menu.deleteOne(menuItem);
         res.status(201).json({ message: 'Menu Item Deleted Successfully!!!'});
     } catch (err) {
         res.status(400).send("ERROR : " + err.message);
