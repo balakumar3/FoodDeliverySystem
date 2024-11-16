@@ -69,6 +69,28 @@ restaurantRouter.post("/register", async (req, res) => {
     }
 });
 
+restaurantRouter.post("/register/:userId", async (req, res) => {
+    try {
+        // Validation of data\
+        const { restaurantName, address, cuisineType, openingHours, deliveryZone } = req.body;
+        isAdminOrRestaurant(req.params.userId);
+
+        const restaurant = new Restaurant({
+            owner: req.params.userId,
+            restaurantName,
+            address,
+            cuisineType,
+            openingHours,
+            deliveryZone
+        })
+        const savedRestaurant = await restaurant.save()
+
+        res.json({ message: "Restaurant added successfully!", data: savedRestaurant});
+    } catch (err) {
+        res.status(400).send("ERROR : " + err.message);
+    }
+});
+
 restaurantRouter.post("/login", async (req, res) => {
     try {
         const { emailId, password } = req.body;
