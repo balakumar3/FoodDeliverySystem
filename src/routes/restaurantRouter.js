@@ -243,7 +243,7 @@ restaurantRouter.get("/orders/:userId/:restaurantId/:status", userAuth, async (r
     try {
         isAdminOrRestaurant(req.params.userId);
         const order = await Order.find( {restaurant: req.params.restaurantId, orderStatus: req.params.status} );
-        console.log(Order);
+        console.log(order);
         let responseObj = [];
         order.forEach((element) => {
             let itemsObject = [];
