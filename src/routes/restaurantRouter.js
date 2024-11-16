@@ -5,6 +5,7 @@ const bcrypt = require("bcrypt");
 const Menu = require("../models/Menu");
 const Restaurant = require("../models/Restaurant");
 const Order = require("../models/Order");
+const OrderItems = require("../models/OrderItem");
 const { userAuth } = require("../middlewares/auth");
 const restaurantRouter = express.Router();
 
@@ -19,7 +20,7 @@ async function isAdminOrRestaurant (userId) {
         }
     }
     catch (err) {
-        throw new Error(err);
+        throw new Error(err.message);
     }
 }
 
@@ -63,6 +64,28 @@ restaurantRouter.post("/register", async (req, res) => {
 
         const response = { user: savedUser, restaurant: savedRestaurant};
         res.json({ message: "Customer Data added successfully!", data: response});
+    } catch (err) {
+        res.status(400).send("ERROR : " + err.message);
+    }
+});
+
+restaurantRouter.post("/register/:userId", async (req, res) => {
+    try {
+        // Validation of data\
+        const { restaurantName, address, cuisineType, openingHours, deliveryZone } = req.body;
+        isAdminOrRestaurant(req.params.userId);
+
+        const restaurant = new Restaurant({
+            owner: req.params.userId,
+            restaurantName,
+            address,
+            cuisineType,
+            openingHours,
+            deliveryZone
+        })
+        const savedRestaurant = await restaurant.save()
+
+        res.json({ message: "Restaurant added successfully!", data: savedRestaurant});
     } catch (err) {
         res.status(400).send("ERROR : " + err.message);
     }
@@ -153,10 +176,10 @@ restaurantRouter.get("/menu/:userId/:restaurantId", userAuth, async (req, res) =
     }
 });
 
-restaurantRouter.post("/item", userAuth, async (req, res) => {
+restaurantRouter.post("/item/:userId", userAuth, async (req, res) => {
     try {
-        const { userId, restaurant ,itemName, description, price, availability } = req.body;
-        isAdminOrRestaurant(userId);
+        const { restaurant ,itemName, description, price, availability } = req.body;
+        isAdminOrRestaurant(req.params.userId);
         const menu = new Menu({
             restaurant,
             itemName,
@@ -220,7 +243,32 @@ restaurantRouter.get("/orders/:userId/:restaurantId/:status", userAuth, async (r
     try {
         isAdminOrRestaurant(req.params.userId);
         const order = await Order.find( {restaurant: req.params.restaurantId, orderStatus: req.params.status} );
-        res.json({ message: "List of all Orders with status - " + req.params.status, data: order });
+        console.log(order);
+        let responseObj = [];
+        order.forEach((element) => {
+            let itemsObject = [];
+            element.items.forEach((element1) => {
+                const orderItemObject = OrderItems.findById(element1);
+                const menuObject = Menu.findById(orderItemObject.menuItem);
+                let itemObj = {
+                    item: menuObject.itemName,
+                    quantity: orderItemObject.quantity
+                }
+                itemsObject.push(itemObj);
+            })
+            let orderObject = {
+                id: element._id,
+                customer: element.customer,
+                restaurant: element.restaurant,
+                orderDate: element.orderDate,
+                orderStatus: element.orderStatus,
+                totalAmount: element.totalAmount,
+                deliveryTime: element.deliveryTime,
+                items: itemsObject
+            };
+            responseObj.push(orderObject);
+        });
+        res.json({ message: "List of all Orders with status - " + req.params.status, data: responseObj });
     }
     catch (err) {
         res.status(400).send("ERROR : " + err.message);
