@@ -37,12 +37,12 @@ adminRouter.post("/login", async (req, res) => {
             res.cookie("token", token, {
                 expires: new Date(Date.now() + 8 * 3600000),
             });
-            res.send("User login successfully");
+            res.status(200).send("User login successfully");
         } else {
             throw new Error("Invalid credentials");
         }
     } catch (err) {
-        res.status(400).send("ERROR : " + err.message);
+        res.status(400).json({ error: "ERROR : " + err.message });
     }
 });
 
@@ -53,7 +53,7 @@ adminRouter.post("/logout", userAuth, isAdmin, async (req, res) => {
     const userDocument = await User.findByIdAndUpdate(req.user._id, {
         lastActiveAt: Date.now()
     }, { new: true }); // Returns the updated document
-    res.send("Logout is successfull!!");
+    res.status(200).send("Logout is successfull!!");
 });
 
 
@@ -78,9 +78,9 @@ adminRouter.post("/register/users", userAuth, isAdmin, async (req, res) => {
         });
         await user.save();
 
-        res.json({ message: "User Data added successfully!" });
+        res.status(201).json({ message: "User Data added successfully!" });
     } catch (err) {
-        res.status(400).send("ERROR : " + err.message);
+        res.status(400).json({ error: "ERROR : " + err.message });
     }
 
 });
@@ -93,7 +93,7 @@ adminRouter.patch("/users/deactivate/:userId", userAuth, isAdmin, async (req, re
         }
         res.json({ message: 'User deactivated', user });
     } catch (error) {
-        res.status(400).json({ message: `Error deactivating user ${error}` });
+        res.status(400).json({ error: `Error deactivating user ${error}` });
     }
 });
 
@@ -122,7 +122,7 @@ adminRouter.patch("/users/:userId", userAuth, isAdmin, async (req, res) => {
 
         res.json(updatedUser);
     } catch (error) {
-        res.status(400).json({ message: 'Error updating user', error });
+        res.status(400).json({ error: 'Error updating user', error });
     }
 });
 
@@ -199,7 +199,7 @@ adminRouter.get('/orders', userAuth, isAdmin, async (req, res) => {
 
         const totalOrders = await Order.countDocuments(query);
 
-        res.json({
+        res.status(200).json({
             data: orders,
             page: parseInt(page),
             totalPages: Math.ceil(totalOrders / limit),
